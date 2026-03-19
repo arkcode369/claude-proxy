@@ -9,6 +9,8 @@ services:
       - PORT=1111
       - UPSTREAM_URL=${UPSTREAM_URL}
       - API_KEYS=${API_KEYS}
+    volumes:
+      - ./logs:/app/logs   # persist logs on host
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:1111/health"]
       interval: 30s

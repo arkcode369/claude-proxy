@@ -2,9 +2,9 @@
 
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { logger } from "hono/logger";
 
 import { authMiddleware } from "./middleware/auth";
+import { requestLoggerMiddleware } from "./middleware/requestLogger";
 import health from "./routes/health";
 import messages from "./routes/messages";
 import analyze from "./routes/analyze";
@@ -12,9 +12,9 @@ import analyze from "./routes/analyze";
 const app = new Hono();
 
 // ─── Global Middleware ───────────────────────────────────────────────────────
-app.use("*", logger());
 app.use("*", cors());
 app.use("*", authMiddleware);
+app.use("*", requestLoggerMiddleware); // runs after auth so key is available
 
 // ─── Routes ──────────────────────────────────────────────────────────────────
 app.route("/", health);
