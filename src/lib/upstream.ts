@@ -9,15 +9,59 @@ export type UpstreamResult =
   | { ok: false; status: number; data: unknown }
   | { ok: false; status: 502; error: string };
 
+// Remove cache_control from a content block or system array item
+function stripCacheControl<T extends Record<string, unknown>>(item: T): Omit<T, "cache_control"> {
+  const { cache_control, ...rest } = item;
+  return rest as Omit<T, "cache_control">;
+}
+
+// Recursively strip cache_control from system and messages content arrays
+function sanitizeBody(raw: Record<string, unknown>): Record<string, unknown> {
+  const result = { ...raw };
+
+  // Strip thinking — not supported by upstream
+  delete result.thinking;
+
+  // Strip cache_control from system array
+  if (Array.isArray(result.system)) {
+    result.system = result.system.map((item: unknown) =>
+      item !== null && typeof item === "object"
+        ? stripCacheControl(item as Record<string, unknown>)
+        : item
+    );
+  }
+
+  // Strip cache_control from messages[].content arrays
+  if (Array.isArray(result.messages)) {
+    result.messages = result.messages.map((msg: unknown) => {
+      if (msg === null || typeof msg !== "object") return msg;
+      const m = msg as Record<string, unknown>;
+      if (!Array.isArray(m.content)) return m;
+      return {
+        ...m,
+        content: m.content.map((block: unknown) =>
+          block !== null && typeof block === "object"
+            ? stripCacheControl(block as Record<string, unknown>)
+            : block
+        ),
+      };
+    });
+  }
+
+  return result;
+}
+
 export async function callUpstream(body: unknown): Promise<UpstreamResult> {
   const rawBody = body !== null && typeof body === "object"
     ? (body as Record<string, unknown>)
     : {};
 
-  // Strip "stream: true" — upstream does not support SSE
-  // Force model override if FORCE_MODEL is set in .env
+  // Sanitize + strip unsupported fields
+  const sanitized = sanitizeBody(rawBody);
+
+  // Strip stream:true, force model override if set
   const safeBody = {
-    ...rawBody,
+    ...sanitized,
     stream: false,
     ...(config.forceModel ? { model: config.forceModel } : {}),
   };
