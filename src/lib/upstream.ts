@@ -10,11 +10,17 @@ export type UpstreamResult =
   | { ok: false; status: 502; error: string };
 
 export async function callUpstream(body: unknown): Promise<UpstreamResult> {
+  const rawBody = body !== null && typeof body === "object"
+    ? (body as Record<string, unknown>)
+    : {};
+
   // Strip "stream: true" — upstream does not support SSE
-  const safeBody =
-    body !== null && typeof body === "object"
-      ? { ...(body as Record<string, unknown>), stream: false }
-      : body;
+  // Force model override if FORCE_MODEL is set in .env
+  const safeBody = {
+    ...rawBody,
+    stream: false,
+    ...(config.forceModel ? { model: config.forceModel } : {}),
+  };
 
   let res: Response;
 

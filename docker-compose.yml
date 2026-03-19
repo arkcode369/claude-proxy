@@ -8,6 +8,7 @@ services:
     environment:
       - PORT=1111
       - UPSTREAM_URL=${UPSTREAM_URL}
+      - FORCE_MODEL=${FORCE_MODEL:-claude-haiku-4-5-20251001}
       - API_KEYS=${API_KEYS}
     volumes:
       - ./logs:/app/logs   # persist logs on host
