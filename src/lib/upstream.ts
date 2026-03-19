@@ -15,6 +15,32 @@ function stripCacheControl<T extends Record<string, unknown>>(item: T): Omit<T, 
   return rest as Omit<T, "cache_control">;
 }
 
+// Strip non-standard fields from response content blocks
+// e.g. upstream adds "caller" field to tool_use blocks which breaks RooCode
+function sanitizeResponseContent(content: unknown[]): unknown[] {
+  return content.map((block) => {
+    if (block === null || typeof block !== "object") return block;
+    const b = block as Record<string, unknown>;
+    if (b.type === "tool_use") {
+      // Only keep standard Anthropic tool_use fields
+      const { id, type, name, input } = b;
+      return { id, type, name, input };
+    }
+    return block;
+  });
+}
+
+// Strip non-standard fields from upstream response
+function sanitizeResponse(data: unknown): unknown {
+  if (data === null || typeof data !== "object") return data;
+  const d = data as Record<string, unknown>;
+  if (!Array.isArray(d.content)) return data;
+  return {
+    ...d,
+    content: sanitizeResponseContent(d.content),
+  };
+}
+
 // Recursively strip cache_control from system and messages content arrays
 function sanitizeBody(raw: Record<string, unknown>): Record<string, unknown> {
   const result = { ...raw };
@@ -81,7 +107,8 @@ export async function callUpstream(body: unknown): Promise<UpstreamResult> {
     return { ok: false, status: 502, error: "Upstream request failed" };
   }
 
-  const data = await res.json();
+  const raw = await res.json();
+  const data = sanitizeResponse(raw);
   console.log("[upstream] ← response status:", res.status);
   console.log("[upstream] ← response body:", JSON.stringify(data, null, 2));
   return { ok: res.ok, status: res.status, data };
