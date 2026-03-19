@@ -5,7 +5,9 @@ import { logger } from "hono/logger";
 const app = new Hono();
 
 // ─── Config ────────────────────────────────────────────────────────────────
-const UPSTREAM_URL = "https://marketriskmonitor.com/api/analyze";
+const UPSTREAM_URL = Bun.env.UPSTREAM_URL;
+if (!UPSTREAM_URL) throw new Error("UPSTREAM_URL is not set in .env");
+
 const API_KEYS = (Bun.env.API_KEYS ?? "").split(",").map((k) => k.trim()).filter(Boolean);
 const PORT = Number(Bun.env.PORT ?? 1111);
 

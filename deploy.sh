@@ -26,10 +26,12 @@ echo "✅ Docker is ready"
 # ─── 2. Set up .env ───────────────────────────────────────────────────────────
 if [ ! -f .env ]; then
   echo ""
-  echo "🔑 Setting up API Keys..."
+  echo "⚙️  Setting up .env..."
+  read -p "Enter your upstream URL (e.g. https://yoursite.com/api/analyze): " UPSTREAM
   read -p "Enter your API key(s) (comma-separated, e.g. mykey123,key2): " USER_KEYS
-  echo "API_KEYS=${USER_KEYS}" > .env
-  echo "PORT=1111" >> .env
+  echo "PORT=1111" > .env
+  echo "UPSTREAM_URL=${UPSTREAM}" >> .env
+  echo "API_KEYS=${USER_KEYS}" >> .env
   echo "✅ .env created"
 else
   echo "✅ .env already exists, skipping"
