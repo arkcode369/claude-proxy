@@ -22,6 +22,8 @@ export async function callUpstream(body: unknown): Promise<UpstreamResult> {
     ...(config.forceModel ? { model: config.forceModel } : {}),
   };
 
+  console.log("[upstream] → sending body:", JSON.stringify(safeBody, null, 2));
+
   let res: Response;
 
   try {
@@ -36,5 +38,7 @@ export async function callUpstream(body: unknown): Promise<UpstreamResult> {
   }
 
   const data = await res.json();
+  console.log("[upstream] ← response status:", res.status);
+  console.log("[upstream] ← response body:", JSON.stringify(data, null, 2));
   return { ok: res.ok, status: res.status, data };
 }
