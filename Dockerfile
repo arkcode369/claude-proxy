@@ -17,6 +17,9 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/src ./src
 COPY package.json ./
 
+# Create logs dir with correct ownership before switching user
+RUN mkdir -p /app/logs && chown -R bun:bun /app/logs
+
 # Non-root user for security
 USER bun
 
