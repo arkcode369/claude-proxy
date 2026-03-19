@@ -1,0 +1,17 @@
+{
+  "name": "claude-proxy",
+  "version": "1.0.0",
+  "description": "Anthropic-compatible proxy for Claude via custom upstream",
+  "module": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "bun --watch src/index.ts",
+    "start": "bun src/index.ts"
+  },
+  "dependencies": {
+    "hono": "^4.7.4"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}
